@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_0335614c_29a8_4b61_b0ce_9a693c8fc23a_Output_Variables_filterValue = Any
+

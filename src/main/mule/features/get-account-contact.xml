@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="get-account-contact-sub-flow" doc:id="a5aed734-0608-4024-802a-d2d7216bcefc" >
+		<ee:transform doc:name="init vars" doc:id="c171ed09-7c0d-44a4-9b64-21b1825c2000" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="id" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.id]]></ee:set-variable>
+				<ee:set-variable variableName="account" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.account]]></ee:set-variable>
+				<ee:set-variable variableName="contact" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.contact]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="c8507540-6934-4cf6-803a-a0342a893b46" >
+			<when expression='#[!isEmpty(vars.id) and vars.account == "yes" and vars.contact == "no"]'>
+				<http:request method="GET" doc:name="GET: Account By Id" doc:id="d50612d5-ab95-4b56-9e40-8b105ea1f2a5" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllAccounts" >
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.id
+}]]]></http:query-params>
+				</http:request>
+				<ee:transform doc:name="Filter deleted Accounts" doc:id="951b1c4e-a5ac-4f44-acea-ddc00a351ba8">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[!isEmpty(vars.id) and vars.account == "no" and vars.contact == "yes"]'>
+				<http:request method="GET" doc:name="GET: Contact By id" doc:id="bcf7e371-d7e1-4491-9f13-1ae1653d7f45" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllContacts" >
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.id
+}]]]></http:query-params>
+				</http:request>
+				<ee:transform doc:name="Filter Deleted Contacts" doc:id="5b711d9b-11e2-45a2-a0fe-dae6651d30be" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[isEmpty(vars.id) and vars.account == "yes" and vars.contact == "no"]'>
+				<http:request method="GET" doc:name="GET: All Accounts" doc:id="e71bf553-b915-45f4-9897-243bf538abbf" path="/getAllAccounts" config-ref="HTTP_Request_configuration_SFDC_System_API"/>
+				<ee:transform doc:name="Filter Deleted Accounts" doc:id="5e3635e2-82c3-4ab8-9d77-b98db3159ada" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[isEmpty(vars.id) and vars.account == "no" and vars.contact == "yes"]'>
+				<http:request method="GET" doc:name="GET: All Contacts" doc:id="91108bba-65fd-436c-9eeb-1e40e4494b54" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllContacts"/>
+				<ee:transform doc:name="Filter Deleted Contacts" doc:id="f5e7edbe-232e-49de-a5df-534062a1fca1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[!isEmpty(vars.id) and vars.account == "yes" and vars.contact == "yes"]'>
+				<http:request method="GET" doc:name="GET: Account By Id" doc:id="5495fd28-9bc9-4c31-a494-c15aa84f4055" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllAccounts">
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	"id" : vars.id
+}]]]></http:query-params>
+				</http:request>
+				<set-variable value="#[payload]" doc:name="accountPayload" doc:id="ae2a59a7-95ed-450f-9108-d788a28db1a6" variableName="accountPayload" />
+				<choice doc:name="Choice" doc:id="1e890199-e883-4fcc-9ef1-c9cd8d57173c">
+					<when expression="#[vars.accountPayload.Contacts[0].Id[0]]">
+						<http:request method="GET" doc:name="GET: Contact By id" doc:id="f442a1fc-1c3a-45ff-af9e-7a4793c8cf88" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllContacts">
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	"id" : vars.accountPayload.Contacts[0].Id[0]
+}]]]></http:query-params>
+				</http:request>
+						<set-variable value="#[payload]" doc:name="contactPayload" doc:id="36d48dd5-b603-41cf-b313-788ca11419f7" variableName="contactPayload" />
+						<ee:transform doc:name="Combine Data" doc:id="240f69ca-04b8-48b5-ba9e-016349b0039d">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Account": vars.accountPayload,
+	"Contact": vars.contactPayload
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					</when>
+					<otherwise >
+						<set-payload value="#[payload]" doc:name="Set Payload" doc:id="e3bda821-e111-42c3-937f-d564415e1970" />
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise >
+				<http:request method="GET" doc:name="GET: All Accounts" doc:id="994dc94e-5915-4262-96b8-bb59ce8e5300" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllAccounts"/>
+				<set-variable value="#[payload]" doc:name="allAccounts" doc:id="53da7d68-bf0c-4619-80bf-e8150005f89c" variableName="allAccounts"/>
+				<http:request method="GET" doc:name="GET: All Contacts" doc:id="d6d09c4c-90a7-4c03-ad3f-993753bf5316" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllContacts" />
+				<set-variable value="#[payload]" doc:name="allContacts" doc:id="c81820c0-a25e-4ba1-a510-f9d2a7f39131" variableName="allContacts"/>
+				<ee:transform doc:name="Combine Data" doc:id="815c57d8-31ab-41c0-ad19-2a68746c1a00" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.allAccounts map (account, index)->{
+	"Account": account,
+	"Contact": vars.allContacts filter (contact, itemIndex) -> (contact.Id == account.Contacts[0].Id)
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="Filter Deleted Accounts" doc:id="c4ba2aaf-8443-473b-ba45-e694ca9b483c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.Account filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

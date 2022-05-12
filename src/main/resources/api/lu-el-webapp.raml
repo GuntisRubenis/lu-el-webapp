@@ -1,0 +1,74 @@
+#%RAML 1.0
+title: lu-el=webapp
+description: Experience API for Web App
+mediaType: [application/json]
+protocols: [HTTPS]
+version: v1
+securitySchemes:
+  ClientId_Enforcement_policy: !include securitySchemas/clientSecretEnforcement.raml
+securedBy: ClientId_Enforcement_policy
+/getAccountContact:
+  get:
+    displayName: Account Contact
+    queryParameters: 
+      account:
+        description: Account
+        enum:
+          ["yes", "no"]
+        default: "no"  
+      contact:
+        description: contact
+        enum:
+          ["yes", "no"]
+        default: "no" 
+      id:
+        description: Id
+        type: string
+        required: false  
+    responses:
+      200:
+        body:
+/deleteAccountContact:
+  delete:
+    displayName: Delete Account Contact
+    queryParameters: 
+      objectType:
+        description: object type
+        enum:
+          ["account", "contact"]
+      contactId:
+        description: Id Contact
+        type: string
+        required: false
+      accounttId:
+        description: Id Account
+        type: string
+        required: false
+    responses:
+      200:
+        body:
+/updateAccountContact:
+  patch:
+    displayName: Update Account Contact
+    queryParameters: 
+      objectType:
+        description: object type
+        enum:
+          ["account", "contact", "all"]
+      contactId:
+        description: Id Contact
+        type: string
+        required: false
+      accounttId:
+        description: Id Account
+        type: string
+        required: false
+    responses:
+      200:
+        body:
+/createAccountContact:
+  post:
+    displayName: Create Account Contact
+    responses:
+      200:
+        body:

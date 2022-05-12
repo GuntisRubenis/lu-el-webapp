@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="update-account-contact-subflow" doc:id="1ed9411b-b1c8-4434-92d0-9d180071c447" >
+		<ee:transform doc:name="init vars" doc:id="bddf3012-26f5-4edd-86c5-b2a739e1021e" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="objectType" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.objectType]]></ee:set-variable>
+				<ee:set-variable variableName="accountId" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.accountId]]></ee:set-variable>
+				<ee:set-variable variableName="contactId" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.contactId]]></ee:set-variable>
+				<ee:set-variable variableName="initPayload" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Copy_of_Choice" doc:id="69d71514-0a27-4b12-9e65-0c011c791885" >
+			<when expression='#[vars.objectType == "account"]' >
+				<http:request method="PATCH" doc:name="Update Account" doc:id="8dbe3db0-65bb-4680-951b-9011a1f7c145" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/updateAccount/{id}" >
+					<http:body ><![CDATA[#[payload.Account]]]></http:body>
+					<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.accountId
+}]]]></http:uri-params>
+				</http:request>
+			</when>
+			<when expression='#[vars.objectType == "contact"]' >
+				<http:request method="PATCH" doc:name="Update Contact" doc:id="843b065d-23ca-40cc-8f95-a69a7a1fc3ce" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/updateContact/{id}" >
+					<http:body ><![CDATA[#[payload.Contact]]]></http:body>
+					<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.contactId
+}]]]></http:uri-params>
+				</http:request>
+			</when>
+			<otherwise>
+				<http:request method="PATCH" doc:name="Update Account" doc:id="38090f75-d102-4d4a-a642-6dfcc8628697" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/updateAccount/{id}">
+			<http:body><![CDATA[#[payload.Account]]]></http:body>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"id" : vars.accountId
+}]]]></http:uri-params>
+		</http:request>
+				<http:request method="GET" doc:name="GET: All Accounts by Id" doc:id="2d853e89-dc72-4a4f-932b-778d534236fe" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllAccounts">
+					<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"id" : payload.items.id[0]
+}]]]></http:query-params>
+				</http:request>
+				<http:request method="PATCH" doc:name="Update Contact" doc:id="c59feeb7-45a8-46a4-88e6-abc1cb5d29f1" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/updateContact/{id}" >
+					<http:body ><![CDATA[#[vars.initPayload.Contact]]]></http:body>
+					<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : payload.Contacts[0].Id[0]
+}]]]></http:uri-params>
+				</http:request>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

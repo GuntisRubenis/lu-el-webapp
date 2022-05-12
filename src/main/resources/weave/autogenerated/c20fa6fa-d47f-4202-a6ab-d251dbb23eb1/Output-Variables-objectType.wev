@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_c20fa6fa_d47f_4202_a6ab_d251dbb23eb1_Output_Variables_objectType = Any
+

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="lu-el-webapp-main">
+        <http:listener path="${https.path}" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="lu-el-webapp-config" />
+    </flow>
+    <flow name="get:\getAccountContact:lu-el-webapp-config">
+        <flow-ref doc:name="get-account-contact-sub-flow" doc:id="7eeff8b8-3d95-4f18-844f-dad2f1b87fbc" name="get-account-contact-sub-flow" />
+    </flow>
+    <flow name="delete:\deleteAccountContact:lu-el-webapp-config">
+        <flow-ref doc:name="delete-account-contact-subflow" doc:id="c03e2458-2147-4373-832e-6fe9b752672f" name="delete-account-contact-subflow" />
+    </flow>
+    <flow name="patch:\updateAccountContact:lu-el-webapp-config">
+        <flow-ref doc:name="update-account-contact-subflow" doc:id="7b95cfd5-6359-4ae1-8f43-82a00616b57a" name="update-account-contact-subflow" />
+    </flow>
+    <flow name="post:\createAccountContact:lu-el-webapp-config">
+        <flow-ref doc:name="create-account-contact-subflow" doc:id="a952f0e5-336e-4b80-96f0-7f0d110b70fd" name="create-account-contact-subflow" />
+    </flow>
+</mule>

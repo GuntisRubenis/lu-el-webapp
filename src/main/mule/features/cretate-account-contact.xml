@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="create-account-contact-subflow" doc:id="c20fa6fa-d47f-4202-a6ab-d251dbb23eb1" >
+		<foreach doc:name="For Each" doc:id="56ebf418-d9c7-4320-8c61-da12effe9558" collection="#[payload]">
+					<ee:transform doc:name="init vars" doc:id="822dd45c-fa61-475e-bd86-7a1d0c144493">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="initPayload"><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<http:request method="POST" doc:name="Create Account" doc:id="964007ef-9a65-4b4b-81d4-746cc70b83d9" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/createAccount">
+				<http:body ><![CDATA[#[vars.initPayload.Account]]]></http:body>
+				</http:request>
+			<ee:transform doc:name="contactPayload" doc:id="335fe949-8cd7-4513-989c-3f6e344eb490" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="contactPayload" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.initPayload.Contact ++ {"AccountId": payload.items.id[0]}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<http:request method="POST" doc:name="Create Contact" doc:id="c6c0bd32-a9e0-4151-a61d-e923e5570097" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/createContact">
+					<http:body ><![CDATA[#[vars.contactPayload]]]></http:body>
+				</http:request>
+				</foreach>
+	</sub-flow>
+</mule>

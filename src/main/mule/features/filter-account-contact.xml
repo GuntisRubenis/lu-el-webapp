@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="filter-account-contact-sub-flow" doc:id="0335614c-29a8-4b61-b0ce-9a693c8fc23a" >
+		<ee:transform doc:name="ini vars" doc:id="e02ab602-77d5-450d-9af8-5a4aabc8792b" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="filterValue" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.filterValue]]></ee:set-variable>
+				<ee:set-variable variableName="filterFieldName" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.filterFieldName]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="cdc66aee-7960-4e85-a2fe-3372712c5af2" >
+			<route >
+				<http:request method="GET" doc:name="GET: All Accounts" doc:id="ac53bd81-1330-4182-8a45-5b6004205d3a" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllAccounts" />
+				<set-variable value="#[payload]" doc:name="allAccounts" doc:id="2a50d3e7-e599-4923-8280-84223aca37f4" variableName="allAccounts" />
+			</route>
+			<route >
+				<http:request method="GET" doc:name="GET: All Contacts" doc:id="0b272fab-8277-4d26-9420-0e8daf08d856" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllContacts" />
+				<set-variable value="#[payload]" doc:name="allContacts" doc:id="753692ec-6dd9-4ecd-a464-874f1b0de9b7" variableName="allContacts" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Combine Data" doc:id="25080c29-e729-43ed-b525-d28671e450b3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.allAccounts map (account, index)->{
+	"Account": account,
+	"Contact": vars.allContacts filter (contact, itemIndex) -> (contact.Id == account.Contacts[0].Id)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="filter by vars" doc:id="010963ca-703d-4880-ab2b-47f54bd00c6c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+---
+payload filter (item,index) -> (item.Account.'varsFieldName' == vars.filterFieldName)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

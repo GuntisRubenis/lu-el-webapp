@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="delete-account-contact-subflow" doc:id="c6097c10-034d-4210-aecc-7847a9c94d2e" >
+		<ee:transform doc:name="init vars" doc:id="dff30a16-3b84-46bc-be24-04d80885b015">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="objectType"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.objectType]]></ee:set-variable>
+				<ee:set-variable variableName="accountId"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.accountId]]></ee:set-variable>
+				<ee:set-variable variableName="contactId"><![CDATA[%dw 2.0
+output application/json
+---
+attributes.queryParams.contactId]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="291a4c46-3452-4e11-8f29-0a185ddcf4f2" >
+			<when expression='#[vars.objectType == "account"]'>
+				<http:request method="DELETE" doc:name="Delete Account" doc:id="c58a920b-1403-4576-a8b6-668559f845b2" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/deleteAccount/{id}">
+					<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.accountId
+}]]]></http:uri-params>
+				</http:request>
+			</when>
+			<when expression='#[vars.objectType == "contact"]' >
+				<http:request method="DELETE" doc:name="Delete Contact" doc:id="00370167-3b70-47f3-977c-8a0c2874d919" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/deleteContact/{id}" >
+					<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.contactId
+}]]]></http:uri-params>
+				</http:request>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Not Deleted Response" doc:id="5f117fb6-70e1-4c7d-b9a6-4b073c23f4eb" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Object Type not specified, nothing is deleted"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>
