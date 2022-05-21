@@ -91,7 +91,7 @@ payload filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
 				</http:request>
 				<set-variable value="#[payload]" doc:name="accountPayload" doc:id="ae2a59a7-95ed-450f-9108-d788a28db1a6" variableName="accountPayload" />
 				<choice doc:name="Choice" doc:id="1e890199-e883-4fcc-9ef1-c9cd8d57173c">
-					<when expression="#[vars.accountPayload.Contacts[0].Id[0]]">
+					<when expression="#[!isEmpty(vars.accountPayload.Contacts[0].Id[0])]">
 						<http:request method="GET" doc:name="GET: Contact By id" doc:id="f442a1fc-1c3a-45ff-af9e-7a4793c8cf88" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllContacts">
 					<http:query-params><![CDATA[#[output application/java
 ---
@@ -119,9 +119,9 @@ output application/json
 			</when>
 			<otherwise >
 				<http:request method="GET" doc:name="GET: All Accounts" doc:id="994dc94e-5915-4262-96b8-bb59ce8e5300" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllAccounts"/>
-				<set-variable value="#[payload]" doc:name="allAccounts" doc:id="53da7d68-bf0c-4619-80bf-e8150005f89c" variableName="allAccounts"/>
+				<set-variable value='#[payload filter (item, index) -&gt; (item.IsDeleted == "false")]' doc:name="allAccounts" doc:id="53da7d68-bf0c-4619-80bf-e8150005f89c" variableName="allAccounts"/>
 				<http:request method="GET" doc:name="GET: All Contacts" doc:id="d6d09c4c-90a7-4c03-ad3f-993753bf5316" config-ref="HTTP_Request_configuration_SFDC_System_API" path="/getAllContacts" />
-				<set-variable value="#[payload]" doc:name="allContacts" doc:id="c81820c0-a25e-4ba1-a510-f9d2a7f39131" variableName="allContacts"/>
+				<set-variable value='#[payload filter (item, index) -&gt; (item.IsDeleted == "false")]' doc:name="allContacts" doc:id="c81820c0-a25e-4ba1-a510-f9d2a7f39131" variableName="allContacts"/>
 				<ee:transform doc:name="Combine Data" doc:id="815c57d8-31ab-41c0-ad19-2a68746c1a00" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
@@ -138,7 +138,8 @@ vars.allAccounts map (account, index)->{
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-payload.Account filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
+payload
+//payload.Account filter (item, index) -> (item.IsDeleted == "false")]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
 			</otherwise>
